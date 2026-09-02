@@ -158,4 +158,30 @@ function getSessionSummary(sessionId) {
   };
 }
 
-module.exports = { createToll, checkPayment, getSessionSummary, nextTollAmount };
+function listSessions() {
+  const result = [];
+  for (const [sessionId, s] of sessions) {
+    const tolls = Array.from(pendingTolls.values())
+      .filter(t => t.sessionId === sessionId)
+      .sort((a, b) => a.createdAt - b.createdAt);
+    result.push({
+      sessionId,
+      offenseCount:  s.offenseCount,
+      totalPaidSats: tolls.filter(t => t.paid).reduce((sum, t) => sum + t.invoice.amountSats, 0),
+      nextTollSats:  nextTollAmount(sessionId),
+      tollHistory:   tolls.map(t => ({
+        paymentHash: t.invoice.paymentHash,
+        tool:        t.tool,
+        offenseNum:  t.offenseNum,
+        amountSats:  t.invoice.amountSats,
+        paid:        t.paid,
+        paidAt:      t.paidAt,
+        createdAt:   t.createdAt,
+        mock:        t.invoice.mock,
+      })),
+    });
+  }
+  return result;
+}
+
+module.exports = { createToll, checkPayment, getSessionSummary, listSessions, nextTollAmount };

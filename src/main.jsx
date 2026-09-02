@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./vx.css";
-import App from "../immutable-dodin-demo.jsx";
+import App from "./App.jsx";
 
 document.documentElement.setAttribute("data-theme", "dark");
 document.body.style.margin = "0";

@@ -175,6 +175,161 @@
   to   { transform: rotate(360deg); }
 }
 
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+/* ── CyberSeal status palette ─────────────────────────────────────────────── */
+:root {
+  --vx-ok:        #4d9966; --vx-ok-bg:   #0a180e; --vx-ok-bd:   #183d22;
+  --vx-warn:      #a88630; --vx-warn-bg: #1a1200; --vx-warn-bd: #3d2800;
+  --vx-crit:      #a63030; --vx-crit-bg: #1c0808; --vx-crit-bd: #3d1010;
+
+  /* Categorical event-type hues */
+  --vx-ev-tool:     #4a7fa5;
+  --vx-ev-flagged:  #c97c30;
+  --vx-ev-paid:     #5a9a6a;
+  --vx-ev-flag-act: #8a6ab8;
+  --vx-ev-sim:      #5a5a5a;
+}
+
+/* ── Dashboard layout helpers ─────────────────────────────────────────────── */
+.cs-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr 340px;
+  grid-template-rows: auto 1fr;
+  gap: 0;
+  height: calc(100vh - 48px); /* below status bar */
+}
+
+.cs-panel {
+  border-right: 1px solid #2A2A2A;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cs-panel:last-child { border-right: none; }
+
+.cs-panel-hd {
+  font-family: 'Chakra Petch', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #757575;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #2A2A2A;
+  margin-bottom: 4px;
+}
+
+.cs-card {
+  background: #282828;
+  border: 1px solid #2A2A2A;
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+
+.cs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Chakra Petch', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.cs-btn {
+  font-family: 'Chakra Petch', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 3px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: opacity 120ms ease;
+  line-height: 1.4;
+}
+
+.cs-btn:hover   { opacity: 0.8; }
+.cs-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.cs-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cs-dot-ok   { background: #4d9966; }
+.cs-dot-warn { background: #a88630; }
+.cs-dot-crit { background: #a63030; animation: pulse-dot 1.2s ease-in-out infinite; }
+.cs-dot-off  { background: #5a5a5a; }
+
+/* Tooltip host */
+.cs-tt-host { position: relative; }
+.cs-tt {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 9999;
+  background: #141414;
+  border: 1px solid #434343;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-family: 'Chakra Petch', ui-monospace, monospace;
+  font-size: 10px;
+  color: #BEBEBE;
+  white-space: pre;
+  max-width: 380px;
+  overflow: hidden;
+  pointer-events: none;
+  line-height: 1.6;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+}
+.cs-tt-host:hover .cs-tt { display: block; }
+
+/* Escalation bar chart */
+.cs-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'IBM Plex Sans Condensed', monospace;
+  font-size: 10px;
+}
+.cs-bar-track {
+  flex: 1;
+  height: 6px;
+  background: #2A2A2A;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.cs-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 300ms ease;
+}
+
+/* Demo runner act states */
+.cs-act { border-left: 3px solid #2A2A2A; padding-left: 10px; }
+.cs-act-pending  { border-color: #434343; }
+.cs-act-running  { border-color: #FFCB03; }
+.cs-act-ok       { border-color: #4d9966; }
+.cs-act-blocked  { border-color: #a88630; }
+.cs-act-error    { border-color: #a63030; }
+
 /* ===== Dark theme overrides ====================================== */
 :root[data-theme="dark"],
 .vx-dark {

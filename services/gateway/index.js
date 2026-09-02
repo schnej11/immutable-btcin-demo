@@ -12,7 +12,7 @@ require("dotenv").config({ path: require("path").join(__dirname, "../../.env") }
 if (!globalThis.crypto) globalThis.crypto = require("node:crypto").webcrypto;
 
 const express = require("express");
-const { createToll, checkPayment, getSessionSummary } = require("./l402");
+const { createToll, checkPayment, getSessionSummary, listSessions } = require("./l402");
 
 const app = express();
 app.use(express.json());
@@ -209,6 +209,12 @@ app.delete("/flagged-tools/:tool", (req, res) => {
   console.log(`[Gateway] Unflagged: ${req.params.tool}`);
   res.json({ flagged: [...flaggedTools] });
 });
+
+// GET /health — liveness probe
+app.get("/health", (_, res) => res.json({ ok: true, flaggedCount: flaggedTools.size }));
+
+// GET /sessions — list all known sessions and their toll history
+app.get("/sessions", (_, res) => res.json(listSessions()));
 
 // GET /tools — proxy tool discovery from MCP server
 app.get("/tools", async (req, res) => {
