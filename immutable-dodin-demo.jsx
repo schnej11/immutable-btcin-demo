@@ -198,6 +198,8 @@ const sectionRule = {
   display: "flex", justifyContent: "space-between", alignItems: "center",
 };
 
+const LOGGER_URL = "http://localhost:3002";
+
 // ── App ────────────────────────────────────────────────────────────────────────
 export default function App() {
   const [panel, setPanel]                 = useState("hashforce");
@@ -215,15 +217,50 @@ export default function App() {
   const [snapshotting, setSnapshotting]   = useState(false);
   const [mpcQueue, setMpcQueue]           = useState([]);
   const [signingPending, setSigningPending] = useState(new Set());
+  // Logger service connection
+  const [loggerConnected, setLoggerConnected] = useState(false);
+  const [otsReceipts, setOtsReceipts]         = useState({});
+  const [loggerMode, setLoggerMode]           = useState("LOCAL_SIM");
   const counterRef = useRef(0);
 
+  // ── Logger polling — overlay logger state when service is reachable ──────────
   useEffect(() => {
+    let alive = true;
+    async function poll() {
+      try {
+        const res = await fetch(`${LOGGER_URL}/state`, { signal: AbortSignal.timeout(1500) });
+        if (!res.ok) throw new Error("not ok");
+        const data = await res.json();
+        if (!alive) return;
+        setLoggerConnected(true);
+        setLoggerMode(data.mode || "GATEWAY");
+        setEvents(data.events || []);
+        setEventHashes(data.eventHashes || {});
+        setEndpointRoots(data.endpointRoots || {});
+        setBaseRoots(data.baseRoots || {});
+        setRegionRoots(data.regionRoots || {});
+        setGlobalRoot(data.globalRoot || null);
+        setOtsReceipts(data.otsReceipts || {});
+        if (data.tamperAlert) setTamperAlert(data.tamperAlert);
+      } catch {
+        if (!alive) return;
+        setLoggerConnected(false);
+      }
+    }
+    const t = setInterval(poll, 1000);
+    poll();
+    return () => { alive = false; clearInterval(t); };
+  }, []);
+
+  // ── Local sim — only runs when logger is NOT connected ───────────────────────
+  useEffect(() => {
+    if (loggerConnected) return; // logger is driving state
     if (!isRunning) return;
     const t = setInterval(() => {
       setEvents(prev => [genEvent(++counterRef.current), ...prev]);
     }, 1200);
     return () => clearInterval(t);
-  }, [isRunning]);
+  }, [isRunning, loggerConnected]);
 
   useEffect(() => {
     if (!events.length) return;
@@ -480,6 +517,20 @@ export default function App() {
             </div>
             <div style={{ fontFamily: C.fontMono, fontSize: 7.5, color: hasTamper ? C.red : C.green,
               wordBreak: "break-all", lineHeight: 1.6 }}>{globalRoot || "—"}</div>
+
+            {/* OTS anchor status */}
+            {globalRoot && (() => {
+              const ots = otsReceipts[globalRoot];
+              const otsColor = !ots ? C.muted : ots.status === "confirmed" ? C.green : ots.status === "pending" ? C.amber : C.red;
+              const otsLabel = !ots ? "NOT STAMPED" : ots.status === "confirmed" ? "OTS CONFIRMED" : ots.status === "pending" ? "OTS PENDING" : "OTS ERROR";
+              return (
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 6 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: otsColor, flexShrink: 0 }} />
+                  <span style={{ fontFamily: C.fontTactical, fontSize: 9, fontWeight: 600,
+                    letterSpacing: "0.08em", color: otsColor }}>{otsLabel}</span>
+                </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -540,7 +591,15 @@ export default function App() {
                 </div>
                 <div style={{ fontFamily: C.fontCondensed, fontSize: 11, color: C.dim, marginTop: 1 }}>{e.file}</div>
                 <div style={{ fontFamily: C.fontMono, fontSize: 7.5, color: C.muted, marginTop: 3,
-                  wordBreak: "break-all", lineHeight: 1.4 }}>{eventHashes[i] || "hashing..."}</div>
+                  wordBreak: "break-all", lineHeight: 1.4 }}>
+                  {(loggerConnected ? eventHashes[e.id] : eventHashes[i]) || "hashing…"}
+                  {e.source && e.source !== "DEMO_SIM" && (
+                    <span style={{ marginLeft: 6, color: e.flagged ? C.red : C.teal,
+                      fontWeight: 600, fontSize: 7 }}>
+                      [{e.source}{e.flagged ? " ⚠ FLAGGED" : ""}]
+                    </span>
+                  )}
+                </div>
               </div>
               {!e.tampered && (
                 <button onClick={() => tamperEvent(e.id)} style={{ padding: "2px 8px", fontSize: 10,
@@ -1350,6 +1409,17 @@ export default function App() {
             color: C.yellow, fontFamily: C.fontTactical, fontSize: 10, fontWeight: 600,
             padding: "3px 10px", borderRadius: 2, letterSpacing: "0.12em" }}>
             UNCLASSIFIED // DEMO
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 5,
+            padding: "3px 8px", borderRadius: 2,
+            border: `1px solid ${loggerConnected ? C.greenBd : C.border}`,
+            background: loggerConnected ? C.greenBg : C.surf2 }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%",
+              background: loggerConnected ? C.green : C.muted }} />
+            <span style={{ fontFamily: C.fontTactical, fontSize: 9, fontWeight: 600,
+              letterSpacing: "0.1em", color: loggerConnected ? C.green : C.muted }}>
+              {loggerConnected ? loggerMode : "LOCAL SIM"}
+            </span>
           </div>
           <div>
             <div style={{ fontFamily: C.fontTactical, fontSize: 16, fontWeight: 600,

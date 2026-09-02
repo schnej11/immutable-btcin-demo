@@ -4,7 +4,13 @@
   "description": "A React component demonstrating a hierarchical Merkle tree audit system for BTCIN endpoints, with Bitcoin testnet anchoring.",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"vite\" \"node server.js\"",
+    "dev": "concurrently \"vite\" \"node services/logger/index.js\"",
+    "dev:full": "concurrently --names \"UI,LOGGER,MCP,GATEWAY\" \"vite\" \"node services/logger/index.js\" \"node services/mcp-server/index.js\" \"node services/gateway/index.js\"",
+    "logger": "node services/logger/index.js",
+    "gateway": "node services/gateway/index.js",
+    "mcp-server": "node services/mcp-server/index.js",
+    "demo": "node services/demo/scenario.js",
+    "anchor": "node server.js",
     "build": "vite build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
